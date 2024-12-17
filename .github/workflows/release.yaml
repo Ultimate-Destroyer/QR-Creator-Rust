@@ -37,7 +37,7 @@ jobs:
 
       - name: Upload Linux artifacts
         if: success()  # Only run if the build was successful
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: linux-artifacts
           path: artifacts/*
@@ -81,7 +81,7 @@ jobs:
 
       - name: Upload Windows artifacts
         if: success()  # Only run if the build was successful
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: windows-artifacts
           path: artifacts/*
@@ -91,14 +91,10 @@ jobs:
     needs: [build-linux, build-windows]  # Wait for both build jobs to complete
     steps:
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: linux-artifacts
+        uses: actions/download-artifact@v2  # This is still fine as v2 is not deprecated
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-artifacts
+        uses: actions/download-artifact@v2  # This is still fine as v2 is not deprecated
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
