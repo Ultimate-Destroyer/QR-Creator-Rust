@@ -3,6 +3,7 @@ use image::LumaA;
 
 // use qrcode::render::{svg, string, unicode, pic};
 
+#[allow(dead_code)]
 #[deprecated = "I'll Implement This Later."]
 pub enum QRMode {
     SVG,
