@@ -91,13 +91,13 @@ jobs:
     needs: [build-linux, build-windows]  # Wait for both build jobs to complete
     steps:
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v2  # This is still fine as v2 is not deprecated
+        uses: actions/download-artifact@v4  # This is still fine as v2 is not deprecated
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v2  # This is still fine as v2 is not deprecated
+        uses: actions/download-artifact@v4  # This is still fine as v2 is not deprecated
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}  # Name of the release
