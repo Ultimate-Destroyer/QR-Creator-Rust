@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - '*'  # Triggers on version tags like v1.0, v2.1, etc.
+
 permissions:
   contents: write
   
@@ -27,21 +28,21 @@ jobs:
         run: cargo build --verbose --release --target x86_64-unknown-linux-gnu
 
       - name: Archive Linux binary
-        if: success()  # Only run if the build was successful
+        if: success()
         run: |
-          mkdir -p artifacts
-          cp -r target/x86_64-unknown-linux-gnu/release/* artifacts/
-          rm -f artifacts/*.d
-          for file in artifacts/*; do
-            mv "$file" "artifacts/linux_$(basename "$file")"
+          mkdir -p artifacts/linux
+          cp target/x86_64-unknown-linux-gnu/release/* artifacts/linux/
+          rm -f artifacts/linux/*.d
+          for file in artifacts/linux/*; do
+            mv "$file" "artifacts/linux/linux_$(basename "$file")"
           done
 
       - name: Upload Linux artifacts
-        if: success()  # Only run if the build was successful
-        uses: actions/upload-artifact@v4  
+        if: success()
+        uses: actions/upload-artifact@v3  
         with:
           name: linux-artifacts
-          path: artifacts/linux_*
+          path: artifacts/linux/*
 
   build-windows:
     runs-on: ubuntu-latest
@@ -70,21 +71,21 @@ jobs:
         run: cargo build --verbose --release --target x86_64-pc-windows-gnu
 
       - name: Archive Windows binary
-        if: success()  # Only run if the build was successful
+        if: success()
         run: |
-          mkdir -p artifacts
-          cp -r target/x86_64-pc-windows-gnu/release/* artifacts/
-          rm -f artifacts/*.d
-          for file in artifacts/*; do
-            mv "$file" "artifacts/windows_$(basename "$file")"
+          mkdir -p artifacts/windows
+          cp target/x86_64-pc-windows-gnu/release/* artifacts/windows/
+          rm -f artifacts/windows/*.d
+          for file in artifacts/windows/*; do
+            mv "$file" "artifacts/windows/windows_$(basename "$file")"
           done
 
       - name: Upload Windows artifacts
-        if: success()  # Only run if the build was successful
-        uses: actions/upload-artifact@v4  
+        if: success()
+        uses: actions/upload-artifact@v3  
         with:
           name: windows-artifacts
-          path: artifacts/windows_*
+          path: artifacts/windows/*
 
   release:
     runs-on: ubuntu-latest
@@ -100,13 +101,13 @@ jobs:
         with:
           name: windows-artifacts
 
-      - name: Upload Release
+      - name: Upload Release to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}  
           files: |
-            linux_artifacts/linux_*
-            windows_artifacts/windows_*
+            linux/linux_*
+            windows/windows_*
         env:
           GITHUB_TOKEN: ${{ secrets.YOUR_PAT_SECRET }}
