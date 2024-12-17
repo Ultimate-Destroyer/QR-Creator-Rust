@@ -1,7 +1,6 @@
 use qrcode::{QrCode, QrResult};
-use image::LumaA;
-
-// use qrcode::render::{svg, string, unicode, pic};
+use image::{LumaA, error::ImageError};
+use std::fs;
 
 #[allow(dead_code)]
 #[deprecated = "I'll Implement This Later."]
@@ -10,36 +9,33 @@ pub enum QRMode {
     String,
     Unicode,
     PIC,
-    Image
+    Image,
 }
 
 #[derive(Debug)]
 pub struct QRData {
     content: String,
-    // mode: Option<QRMode> I'll Implement This Later.
 }
 
 impl QRData {
-    pub fn new(content: &String, /*mode: Option<QRMode>*/) -> QRData {
+    pub fn new(content: &String) -> QRData {
         QRData {
             content: content.to_owned(),
-            // mode: mode.or_else(|| { Some(QRMode::Image) })
         }
     }
 
     pub fn form_image<'a>(data: &'a QRData, img_path: &'a str) -> QrResult<&'a str> {
-        let code = QrCode::new(data.content.as_bytes());
-        if code.is_err() {
-            panic!("Something went wrong while creating the QrCode.");
+        let code = QrCode::new(data.content.as_bytes())?;
+
+        let render = code.render::<LumaA<u8>>().build();
+
+        let dir = std::path::Path::new(img_path).parent().unwrap();
+        if !dir.exists() {
+            _ = fs::create_dir_all(dir).map_err(|e| ImageError::from(e));
         }
 
-        let render = code.unwrap().render::<LumaA<u8>>().build();
-
-        let save = render.save_with_format(img_path, image::ImageFormat::Png);
-
-        if save.is_err() {
-            panic!("Something went wrong while saving the QrCode.");
-        }
+        _ = render.save_with_format(img_path, image::ImageFormat::Png)
+            .map_err(|e: ImageError| ImageError::from(e));
 
         Ok(img_path)
     }
