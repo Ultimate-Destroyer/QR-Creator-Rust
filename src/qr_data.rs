@@ -13,7 +13,7 @@ pub enum QRMode {
 }
 
 #[derive(Debug)]
-struct QRData {
+pub struct QRData {
     content: String,
     // mode: Option<QRMode> I'll Implement This Later.
 }
