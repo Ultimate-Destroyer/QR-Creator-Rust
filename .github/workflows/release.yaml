@@ -38,6 +38,9 @@ jobs:
           for file in artifacts/*; do
             mv "$file" "artifacts/linux_$(basename "$file")"
           done
+        
+      - name: List Linux target directory
+        run: ls -la target/x86_64-unknown-linux-gnu/release/
 
       - name: Upload Linux artifacts
         if: success()  # Only run if the build was successful
@@ -84,6 +87,9 @@ jobs:
           for file in artifacts/*; do
             mv "$file" "artifacts/windows_$(basename "$file")"
           done
+
+      - name: List Windows target directory
+        run: ls -la target/x86_64-pc-windows-gnu/release/
 
       - name: Upload Windows artifacts
         if: success()  # Only run if the build was successful
