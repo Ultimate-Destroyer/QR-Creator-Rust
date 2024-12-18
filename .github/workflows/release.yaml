@@ -13,14 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
-          components: rustfmt, clippy
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -28,39 +25,36 @@ jobs:
           shared-key: "linux-build"
 
       - name: Build Binary
-        run: |
-          cargo build --release --target x86_64-unknown-linux-gnu
-          strip target/x86_64-unknown-linux-gnu/release/*
+        run: cargo build --verbose --release --target x86_64-unknown-linux-gnu
 
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts/linux
-          # Get binary name from Cargo.toml
-          BINARY_NAME=$(cargo metadata --format-version 1 | jq -r '.packages[0].targets[0].name')
-          cp target/x86_64-unknown-linux-gnu/release/$BINARY_NAME artifacts/linux/
+          # Copy only the main binary, not the entire directory
+          find target/x86_64-unknown-linux-gnu/release -maxdepth 1 -type f -executable -not -name "*.d" -not -name "*.rlib" -exec cp {} artifacts/linux/ \;
           cd artifacts/linux
-          tar czf ../${BINARY_NAME}_linux_x86_64.tar.gz *
-          cd ../..
+          for file in *; do
+            if [ -f "$file" ]; then
+              mv "$file" "linux_$file"
+            fi
+          done
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-artifacts
-          path: artifacts/*.tar.gz
+          path: artifacts/linux/*
           retention-days: 1
 
   build-windows:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-gnu
-          components: rustfmt, clippy
 
       - name: Install MinGW
         run: |
@@ -75,23 +69,25 @@ jobs:
           shared-key: "windows-build"
 
       - name: Build Binary
-        run: cargo build --release --target x86_64-pc-windows-gnu
+        run: cargo build --verbose --release --target x86_64-pc-windows-gnu
 
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts/windows
-          # Get binary name from Cargo.toml
-          BINARY_NAME=$(cargo metadata --format-version 1 | jq -r '.packages[0].targets[0].name')
-          cp target/x86_64-pc-windows-gnu/release/$BINARY_NAME.exe artifacts/windows/
+          # Copy only .exe files, not the entire directory
+          find target/x86_64-pc-windows-gnu/release -maxdepth 1 -name "*.exe" -not -name "*.d" -exec cp {} artifacts/windows/ \;
           cd artifacts/windows
-          zip ../${BINARY_NAME}_windows_x86_64.zip *
-          cd ../..
+          for file in *.exe; do
+            if [ -f "$file" ]; then
+              mv "$file" "windows_$file"
+            fi
+          done
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: artifacts/*.zip
+          path: artifacts/windows/*
           retention-days: 1
 
   release:
@@ -106,8 +102,7 @@ jobs:
         with:
           name: Release ${{ github.ref_name }}
           files: |
-            linux-artifacts/*
-            windows-artifacts/*
-          generate_release_notes: true
+            linux-artifacts/linux_*
+            windows-artifacts/windows_*
         env:
           GITHUB_TOKEN: ${{ secrets.YOUR_PAT_SECRET }}
